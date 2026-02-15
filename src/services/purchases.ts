@@ -36,8 +36,8 @@ export interface PurchaserInfo {
   };
 }
 
-// Local product offerings (RevenueCat would provide these)
-export const MOCK_OFFERINGS: Offering[] = [
+// Fallback offerings used only when live offerings are unavailable.
+export const DEFAULT_OFFERINGS: Offering[] = [
   {
     id: 'premium',
     products: [
@@ -83,7 +83,7 @@ class RevenueCatService {
     // const offerings = await Purchases.getOfferings();
     // return offerings.current?.offerings || [];
     
-    return MOCK_OFFERINGS;
+    return DEFAULT_OFFERINGS;
   }
 
   async getPurchaserInfo(): Promise<PurchaserInfo | null> {

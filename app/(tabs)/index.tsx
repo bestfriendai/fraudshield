@@ -1,7 +1,8 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { colors, spacing, radius, fontSize, fontWeight, shadow } from '@/src/ui/theme';
+import { useAppStore } from '@/src/store/useAppStore';
 
 interface AlertSummary {
   id: string;
@@ -12,30 +13,25 @@ interface AlertSummary {
   color: string;
 }
 
-interface RecentTransaction {
-  id: string;
-  merchant: string;
-  amount: string;
-  date: string;
-  risk: 'low' | 'medium' | 'high';
-  icon: string;
-}
-
 export default function DashboardScreen() {
   const [protectionActive] = useState(true);
+  const transactions = useAppStore((state) => state.transactions);
+
+  const highRiskCount = transactions.filter((tx) => tx.risk === 'high').length;
+  const mediumRiskCount = transactions.filter((tx) => tx.risk === 'medium').length;
+  const lowRiskCount = transactions.filter((tx) => tx.risk === 'low').length;
 
   const alertSummaries: AlertSummary[] = [
-    { id: '1', title: 'High Risk', subtitle: 'Needs attention', icon: '🔴', count: 2, color: colors.semantic.error },
-    { id: '2', title: 'Medium Risk', subtitle: 'Review suggested', icon: '🟡', count: 5, color: colors.semantic.warning },
-    { id: '3', title: 'Low Risk', subtitle: 'Auto-approved', icon: '🟢', count: 23, color: colors.semantic.success },
+    { id: '1', title: 'High Risk', subtitle: 'Needs attention', icon: '🔴', count: highRiskCount, color: colors.semantic.error },
+    { id: '2', title: 'Medium Risk', subtitle: 'Review suggested', icon: '🟡', count: mediumRiskCount, color: colors.semantic.warning },
+    { id: '3', title: 'Low Risk', subtitle: 'Auto-approved', icon: '🟢', count: lowRiskCount, color: colors.semantic.success },
   ];
 
-  const recentTransactions: RecentTransaction[] = [
-    { id: '1', merchant: 'Amazon', amount: '$47.99', date: 'Today', risk: 'low', icon: '📦' },
-    { id: '2', merchant: 'Netflix', amount: '$15.99', date: 'Yesterday', risk: 'low', icon: '🎬' },
-    { id: '3', merchant: 'Unknown', amount: '$299.00', date: 'Feb 12', risk: 'high', icon: '⚠' },
-    { id: '4', merchant: 'Uber', amount: '$24.50', date: 'Feb 11', risk: 'low', icon: '🚗' },
-  ];
+  const recentTransactions = transactions.slice(0, 4).map((tx) => ({
+    ...tx,
+    icon: tx.risk === 'high' ? '⚠️' : tx.risk === 'medium' ? '⏳' : '✅',
+    date: tx.date,
+  }));
 
   const getRiskColor = (risk: string) => {
     switch (risk) {
@@ -48,7 +44,6 @@ export default function DashboardScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
         <View style={styles.header}>
           <View>
             <Text style={styles.greeting}>FraudShield</Text>
@@ -59,7 +54,6 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* Protection Status Card */}
         <View style={styles.protectionCard}>
           <View style={styles.protectionHeader}>
             <View style={styles.protectionStatus}>
@@ -74,23 +68,21 @@ export default function DashboardScreen() {
           <Text style={styles.protectionSubtext}>All accounts monitored in real-time</Text>
         </View>
 
-        {/* Quick Stats */}
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>$12,847</Text>
-            <Text style={styles.statLabel}>Protected</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>30</Text>
+            <Text style={styles.statValue}>{transactions.length}</Text>
             <Text style={styles.statLabel}>Transactions</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>2</Text>
-            <Text style={styles.statLabel}>Blocked</Text>
+            <Text style={styles.statValue}>{highRiskCount}</Text>
+            <Text style={styles.statLabel}>High Risk</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{mediumRiskCount + lowRiskCount}</Text>
+            <Text style={styles.statLabel}>Reviewed</Text>
           </View>
         </View>
 
-        {/* Alert Summary */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Risk Overview</Text>
           <View style={styles.alertGrid}>
@@ -109,7 +101,6 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* Recent Transactions */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recent Transactions</Text>
@@ -138,7 +129,6 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        {/* Add Account Button */}
         <TouchableOpacity style={styles.addAccountButton} activeOpacity={0.8}>
           <Text style={styles.addAccountIcon}>+</Text>
           <Text style={styles.addAccountText}>Add Account to Monitor</Text>
